@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete Cricket Scoreboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            width: 900px;
+            margin: 20px auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        input {
+            padding: 6px;
+            margin: 5px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .run { background: green; color: white; }
+        .wicket { background: red; color: white; }
+        .extra { background: orange; color: white; }
+        .reset { background: blue; color: white; }
+
+        table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid white;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🏏 Complete Cricket Scoreboard</h1>
+
+<div class="container">
+
+    <h2 id="teams">Team A vs Team B</h2>
+    <input type="text" id="teamA" placeholder="Batting Team">
+    <input type="text" id="teamB" placeholder="Bowling Team">
+    <button onclick="setTeams()">Set Teams</button>
+
+    <h2 id="score">0 / 0</h2>
+    <h3 id="overs">Overs:10</h3>
+
+    <h3>Set Batsmen</h3>
+    <input type="text" id="b1" placeholder="Striker">
+    <input type="text" id="b2" placeholder="Non-Striker">
+    <button onclick="setBatsmen()">Set</button>
+
+    <h3>Set Bowler</h3>
+    <input type="text" id="bowlerInput" placeholder="Bowler Name">
+    <button onclick="setBowler()">Set</button>
+
+    <h2>Batting Scorecard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Batsman</th>
+                <th>R</th>
+                <th>B</th>
+                <th>4s</th>
+                <th>6s</th>
+                <th>SR</th>
+            </tr>
+        </thead>
+        <tbody id="batTable"></tbody>
+    </table>
+
+    <h2>Bowling Scorecard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Bowler</th>
+                <th>Overs</th>
+                <th>Runs</th>
+                <th>Wkts</th>
+                <th>Eco</th>
+            </tr>
+        </thead>
+        <tbody id="bowlTable"></tbody>
+    </table>
+
+    <hr>
+
+    <div>
+        <button class="run" onclick="addRun(0)">0</button>
+        <button class="run" onclick="addRun(1)">1</button>
+        <button class="run" onclick="addRun(2)">2</button>
+        <button class="run" onclick="addRun(3)">3</button>
+        <button class="run" onclick="addRun(4)">4</button>
+        <button class="run" onclick="addRun(6)">6</button>
+        <br>
+        <button class="wicket" onclick="addWicket()">Wicket</button>
+        <button class="extra" onclick="addExtra()">Wide/No Ball</button>
+        <button class="reset" onclick="resetMatch()">Reset</button>
+    </div>
+
+</div>
+
+<script>
+let runs = 0, wickets = 0, balls = 0;
+let striker, nonStriker, bowler;
+
+function createBatsman(name){
+    return { name, runs:0, balls:0, fours:0, sixes:0 };
+}
+
+function createBowler(name){
+    return { name, balls:0, runs:0, wickets:0 };
+}
+
+function setTeams(){
+    let a = document.getElementById("teamA").value;
+    let b = document.getElementById("teamB").value;
+    document.getElementById("teams").innerText = a + " vs " + b;
+}
+
+function setBatsmen(){
+    striker = createBatsman(document.getElementById("b1").value);
+    nonStriker = createBatsman(document.getElementById("b2").value);
+    updateBatTable();
+}
+
+function setBowler(){
+    bowler = createBowler(document.getElementById("bowlerInput").value);
+    updateBowlTable();
+}
+
+function strikeRate(p){
+    return p.balls === 0 ? 0 : ((p.runs/p.balls)*100).toFixed(2);
+}
+
+function economy(b){
+    let overs = (b.balls/6).toFixed(1);
+    return b.balls === 0 ? 0 : (b.runs/(b.balls/6)).toFixed(2);
+}
+
+function updateScore(){
+    document.getElementById("score").innerText = runs + " / " + wickets;
+    document.getElementById("overs").innerText =
+        "Overs: " + Math.floor(balls/6) + "." + (balls%6);
+}
+
+function updateBatTable(){
+    document.getElementById("batTable").innerHTML = `
+        <tr>
+            <td>${striker.name}* (Striker)</td>
+            <td>${striker.runs}</td>
+            <td>${striker.balls}</td>
+            <td>${striker.fours}</td>
+            <td>${striker.sixes}</td>
+            <td>${strikeRate(striker)}</td>
+        </tr>
+        <tr>
+            <td>${nonStriker.name}</td>
+            <td>${nonStriker.runs}</td>
+            <td>${nonStriker.balls}</td>
+            <td>${nonStriker.fours}</td>
+            <td>${nonStriker.sixes}</td>
+            <td>${strikeRate(nonStriker)}</td>
+        </tr>
+    `;
+}
+
+function updateBowlTable(){
+    document.getElementById("bowlTable").innerHTML = `
+        <tr>
+            <td>${bowler.name}</td>
+            <td>${Math.floor(bowler.balls/6)}.${bowler.balls%6}</td>
+            <td>${bowler.runs}</td>
+            <td>${bowler.wickets}</td>
+            <td>${economy(bowler)}</td>
+        </tr>
+    `;
+}
+
+function rotateStrike(){
+    [striker, nonStriker] = [nonStriker, striker];
+}
+
+function addRun(run){
+    runs += run;
+    balls++;
+    striker.runs += run;
+    striker.balls++;
+    bowler.runs += run;
+    bowler.balls++;
+
+    if(run === 4) striker.fours++;
+    if(run === 6) striker.sixes++;
+
+    if(run % 2 !== 0) rotateStrike();
+    if(balls % 6 === 0) rotateStrike();
+
+    updateScore();
+    updateBatTable();
+    updateBowlTable();
+}
+
+function addWicket(){
+    wickets++;
+    balls++;
+    striker.balls++;
+    bowler.balls++;
+    bowler.wickets++;
+    alert(striker.name + " OUT!");
+    striker = createBatsman(prompt("Enter new batsman name:"));
+    updateScore();
+    updateBatTable();
+    updateBowlTable();
+}
+
+function addExtra(){
+    runs += 1;
+    bowler.runs += 1;
+    updateScore();
+    updateBowlTable();
+}
+
+function resetMatch(){
+    runs = wickets = balls = 0;
+    document.getElementById("batTable").innerHTML = "";
+    document.getElementById("bowlTable").innerHTML = "";
+    updateScore();
+}
+</script>
+
+</body>
+</html>
